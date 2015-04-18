@@ -39,9 +39,9 @@ function apheleon_Speedometer:draw()
 
     -- Widget Config
 
-    local gaugeMin = 0
-    local gauge180DegMark = 700
-    local startingGaugeAngle = 0
+    local gaugeMin = 0 -- not used currently
+    local gauge180DegMark = 700 -- this is used to 'scale' how fast the gauge needle moves
+    local startingGaugeAngle = 20 -- where does the needle start?
 
     -- Colors
     local gaugeBackgroundColor = Color(0,0,0,120);
