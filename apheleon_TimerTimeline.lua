@@ -22,18 +22,10 @@ function apheleon_TimerTimeline:draw()
 	-- count pickups
 	local pickupCount = #pickupTimers;
     
+    -- Timeline History Duration
+	-- num of historical seconds to show in the timeline
+    local timelineDuration = 30
 
-    -- Options
-
-    -- local timerSpacing = 5; -- 0 or -1 to remove spacing -- this is legacy
-    
-    -- Helpers
-    -- local timerX = 0; --update
-    -- local timerY = 0; -- update
-
-
-    -- Timeline History Duration (how far back in time do we show icons?)
-    local timelineDuration = 30 -- num of historical seconds to show in the timeline
 
 	-- Frame Size
 	local frameHeight = 50
@@ -42,6 +34,7 @@ function apheleon_TimerTimeline:draw()
 	-- Frame Positiion
 	local frameLeft = 0
 	local frameTop = 0
+	local frameBottom = frameTop + frameHeight
 
 	-- Timeline Positioning and Size
 	local timelineTop = frameTop + (frameHeight / 2);
@@ -52,19 +45,31 @@ function apheleon_TimerTimeline:draw()
 	-- Draw the timeline frame
     local frameBackgroundColor = Color(0,0,0,45)
     nvgBeginPath();
-    nvgRect(frameLeft,frameTop,frameWidth,frameHeight);
+    nvgRoundedRect(frameLeft,frameTop,frameWidth,frameHeight,15);
     nvgFillColor(frameBackgroundColor);
     nvgFill();
 
-    -- Draw the timeline line stroke
-    -- TODO
+    -- Draw the timeline dividing line strokes
+    for i=5, timelineDuration-1, 5 do
+		marker = timelineWidth * i / (timelineDuration)
 
-	local pickedUpItemsX = frameLeft -40
-	local pickedUpItemsY = timelineTop
+		nvgStrokeColor(Color(255,255,255, 200));
+		nvgStrokeWidth(2)
+
+		nvgBeginPath();
+		nvgMoveTo(marker, frameTop);
+		nvgLineTo(marker, frameTop + (frameHeight / 4));
+		nvgStroke();
+
+		nvgBeginPath();
+		nvgMoveTo(marker, frameBottom);
+		nvgLineTo(marker, frameBottom - (frameHeight / 4));
+		nvgStroke();
+    end
+
+
 --=========================
-
 	-- Adds number labels for items that appear multiple times on the map
-
 
     -- Build out a count of the number of each items on the map
     itemTypeCounter = {}
@@ -112,7 +117,7 @@ function apheleon_TimerTimeline:draw()
 
 	--============================
 
-	--Create a list of custom item labels to help differentiate between duplicate items
+	-- Create a list of custom item labels to help differentiate between duplicate items
 
 	customItemLabels = {};
 	customItemLabels["cpm3"..PICKUP_TYPE_ARMOR100..1] = "LG";
@@ -128,12 +133,37 @@ function apheleon_TimerTimeline:draw()
 		end
 	end
 
+	--======================
+	-- Fnd the next upcoming item
+	--   why: for use when determing what item to show the time for in the timeline
+	--   logic: for the item that is coming up next, set nextUp = true
+
+	small = nil;
+
+	for i=1, #pickupTimers do
+		if (small == nil and pickupTimers[i].timeUntilRespawn > 0) then
+			small = pickupTimers[i]
+		end
+		if (small ~= nil) then
+			if (pickupTimers[i].timeUntilRespawn > 0 and pickupTimers[i].timeUntilRespawn < small.timeUntilRespawn) then
+				small = pickupTimers[i]
+			end
+		end
+	end
+
+	if (small ~= nil) then
+		small.nextUp = true;
+	end
+
 	--=======================
-    -- iterate pickups
+    -- iterate pickups for rendering
 	for i = 1, pickupCount do
 		local pickup = pickupTimers[i];
     
 		local timeUntilRespawn = pickup.timeUntilRespawn
+
+		-- Don't draw items that will show up off of the timeline range, e.g. carnage
+		if pickup.timeUntilRespawn > timelineDuration * 1000 then break end;
 
 		-- Configure the item icons and color
 
@@ -161,7 +191,7 @@ function apheleon_TimerTimeline:draw()
 			iconColor = Color(60,80,255);
 
 			-- when mega is held set color to light blue and position at the 30 sec mark 
-			if not pickup.canSpawn then
+			if not pickup.canSpawn and timelineDuration >= 30  then
 				iconColor = Color(150,161,255);
 				iconX = timelineWidth * 30000 / (timelineDuration * 1000)
 				pickup.label = "HELD"
@@ -172,9 +202,7 @@ function apheleon_TimerTimeline:draw()
 			iconColor = Color(255,120,128);			
 		end
       
-
 		-- Draw the icons of items that are taken 
-
 	    if pickup.timeUntilRespawn > 0 or not pickup.canSpawn then
 
 			nvgFillColor(iconColor);
@@ -194,44 +222,14 @@ function apheleon_TimerTimeline:draw()
 				return math.floor(num * mult + 0.5) / mult
 			end
 
-
-			-- TODO: Only show timer for the upcoming item
-			if (pickup.timeUntilRespawn < 5000 and pickup.canSpawn) then
+			-- Only show timer for the next upcoming item at all times
+			if (pickup.canSpawn and pickup.nextUp == true) then
 				nvgFontSize(25);
 			    nvgFillColor(Color(255,255,255));
 			    nvgTextAlign(NVG_ALIGN_CENTER, NVG_ALIGN_MIDDLE);
-
-			    --time = math.floor(( (pickup.timeUntilRespawn / 1000) * 10.5 )/ 10)
-
-
 			    time = round(pickup.timeUntilRespawn / 1000, 1)
 			    nvgText(iconX, iconY - 35, time);
 			end
-
 		end
-
-
-  --       -- Time
-		-- local t = FormatTime(pickup.timeUntilRespawn);
-  --       local timeX = timerX + (timerWidth / 2) + iconRadius;
-  --       local time = t.seconds + 60 * t.minutes;
-
-		-- if time == 0 then
-		-- 	time = "-";
-		-- end
-
-		-- if not pickup.canSpawn then
-		-- 	time = "held";
-		-- end
-
-  --       nvgFontSize(30);
-  --       nvgFontFace("TitilliumWeb-Bold");
-	 --    nvgTextAlign(NVG_ALIGN_CENTER, NVG_ALIGN_TOP);
-
-	 --    nvgFontBlur(0);
-	 --    nvgFillColor(Color(255,255,255));
-	 --    nvgText(timeX, timerY, time);
-        
-  --       timerY = timerY + timerHeight + timerSpacing;
     end
 end
