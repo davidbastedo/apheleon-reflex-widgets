@@ -41,20 +41,36 @@ function apheleon_Speedometer:draw()
 
     local gaugeMin = 0 -- not used currently
     local gauge180DegMark = 700 -- this is used to 'scale' how fast the gauge needle moves
-    local startingGaugeAngle = 20 -- where does the needle start?
+    local startingGaugeAngle = 40 -- where does the needle start?
 
     -- Colors
-    local gaugeBackgroundColor = Color(0,0,0,120);
-    local gaugeLineColor = Color(255,255,255,255);
     local textColor = Color(255,255,255,255);
 
-    -- Guage background
+    local gaugeBackgroundColor = Color(0,0,0,120);
+    local gaugeBackgroundCenterColor = Color(255,0,0,100);
+    local gaugeLineColor = Color(255,255,255,255);
+    local gaugeEdgeColor = Color(255,255,255,80);
+
+    local gaugeTickColor = Color(255,255,255,200);
+
+    -- Draw guage background
     nvgBeginPath();
     nvgCircle(circleCenterX, circleCenterY, circleRadius)
     nvgFillColor(gaugeBackgroundColor);
     nvgFill();
 
-    -- Draw gauge center circle
+    -- Draw gauge edge
+    -- nvgStrokeColor(gaugeEdgeColor)
+    -- nvgStrokeWidth(3)
+    -- nvgStroke()
+
+    --Draw gauge inner circle
+    nvgBeginPath();
+    nvgCircle(circleCenterX, circleCenterY, circleRadius / 5)
+    nvgFillColor(gaugeBackgroundCenterColor);
+    nvgFill();
+
+    -- Draw gauge center circle point
     nvgBeginPath();
     nvgCircle(circleCenterX, circleCenterY, circleRadius / 15)
     nvgFillColor(gaugeLineColor);
@@ -76,6 +92,20 @@ function apheleon_Speedometer:draw()
     nvgStrokeWidth(5)
     nvgStroke();
 
+    -- Draw gauge tick circle at each 100 ups
+    tickDegreesMax = 180 + (startingGaugeAngle * 2)
+    tickSpeedMax = (tickDegreesMax * gauge180DegMark) / 180
+
+    for i=0, tickSpeedMax, 100 do
+        tickDegree = i * 180 / gauge180DegMark
+        tickx = circleRadius * -math.cos(degreesToRadians(tickDegree - startingGaugeAngle)) + circleCenterX
+        ticky = circleRadius * -math.sin(degreesToRadians(tickDegree - startingGaugeAngle)) + circleCenterY
+
+        nvgBeginPath();
+        nvgCircle(tickx, ticky, circleRadius / 30)
+        nvgFillColor(gaugeTickColor);
+        nvgFill();
+    end
 
     -- Text
     nvgFontSize(fontSize);
