@@ -13,8 +13,8 @@ registerWidget("apheleon_TimerTimeline");
 customItemLabels = {};
 customItemLabels["cpm3"..PICKUP_TYPE_ARMOR100..1] = "Rail";
 customItemLabels["cpm3"..PICKUP_TYPE_ARMOR100..2] = "LG";
-customItemLabels["cpm22"..PICKUP_TYPE_ARMOR50..1] = "RL";
-customItemLabels["cpm22"..PICKUP_TYPE_ARMOR50..2] = "GL";
+customItemLabels["cpm22"..PICKUP_TYPE_ARMOR50..1] = "GL";
+customItemLabels["cpm22"..PICKUP_TYPE_ARMOR50..2] = "RL";
 
 function mapItemLabel(map, itemtype, itemlabel)
 	if not (customItemLabels[map..itemtype..itemlabel] == nil) then
@@ -25,9 +25,9 @@ function mapItemLabel(map, itemtype, itemlabel)
 end
 
 function apheleon_TimerTimeline:draw()
-	
+
 	-- Sort the items to hopefully make the label maker more consistent
-	--  i noticed in 33.4 that the order of the items in pickupTimers changed. not sure if this will fix that
+	--  i noticed in 33.4 that the order of the items in pickupTimers changed. 
 	table.sort(pickupTimers, function(a,b) return a.type<b.type end)
 
     -- Early out if HUD shouldn't be shown.
@@ -222,11 +222,18 @@ function apheleon_TimerTimeline:draw()
 			end
 
 			-- Only show timer for the next upcoming item at all times
+			--  show integers for time > 5
+			--  show first decimal for time < 5
 			if (pickup.canSpawn and pickup.nextUp == true) then
 				nvgFontSize(25);
 			    nvgFillColor(Color(255,255,255));
 			    nvgTextAlign(NVG_ALIGN_CENTER, NVG_ALIGN_MIDDLE);
-			    time = round(pickup.timeUntilRespawn / 1000, 1)
+			    if (pickup.timeUntilRespawn < 5000) then
+			    	time = round(pickup.timeUntilRespawn / 1000, 1)
+			    else
+			    	time = round(pickup.timeUntilRespawn / 1000, 0)
+			    end
+
 			    nvgText(iconX, iconY - 35, time);
 			end
 		end
