@@ -8,9 +8,28 @@ registerWidget("apheleon_TimerTimeline");
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
+-- Create a list of custom item labels to help differentiate between duplicate items
+
+customItemLabels = {};
+customItemLabels["cpm3"..PICKUP_TYPE_ARMOR100..1] = "Rail";
+customItemLabels["cpm3"..PICKUP_TYPE_ARMOR100..2] = "LG";
+customItemLabels["cpm22"..PICKUP_TYPE_ARMOR50..1] = "RL";
+customItemLabels["cpm22"..PICKUP_TYPE_ARMOR50..2] = "GL";
+
+function mapItemLabel(map, itemtype, itemlabel)
+	if not (customItemLabels[map..itemtype..itemlabel] == nil) then
+		return customItemLabels[map..itemtype..itemlabel]
+	else
+		return itemlabel
+	end
+end
 
 function apheleon_TimerTimeline:draw()
 	
+	-- Sort the items to hopefully make the label maker more consistent
+	--  i noticed in 33.4 that the order of the items in pickupTimers changed. not sure if this will fix that
+	table.sort(pickupTimers, function(a,b) return a.type<b.type end)
+
     -- Early out if HUD shouldn't be shown.
     if not shouldShowHUD() then return end;
 
@@ -112,26 +131,6 @@ function apheleon_TimerTimeline:draw()
     		end
     	end 
     end 
-
-
-
-	--============================
-
-	-- Create a list of custom item labels to help differentiate between duplicate items
-
-	customItemLabels = {};
-	customItemLabels["cpm3"..PICKUP_TYPE_ARMOR100..1] = "LG";
-	customItemLabels["cpm3"..PICKUP_TYPE_ARMOR100..2] = "Rail";
-	customItemLabels["cpm22"..PICKUP_TYPE_ARMOR50..1] = "RL";
-	customItemLabels["cpm22"..PICKUP_TYPE_ARMOR50..2] = "GL";
-
-	function mapItemLabel(map, itemtype, itemlabel)
-		if not (customItemLabels[map..itemtype..itemlabel] == nil) then
-			return customItemLabels[map..itemtype..itemlabel]
-		else
-			return itemlabel
-		end
-	end
 
 	--======================
 	-- Fnd the next upcoming item
