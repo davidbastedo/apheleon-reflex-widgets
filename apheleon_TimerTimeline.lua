@@ -115,8 +115,8 @@ function apheleon_TimerTimeline:draw()
 	--Create a list of custom item labels to help differentiate between duplicate items
 
 	customItemLabels = {};
-	customItemLabels["cpm3"..PICKUP_TYPE_ARMOR100..1] = "Rail";
-	customItemLabels["cpm3"..PICKUP_TYPE_ARMOR100..2] = "LG";
+	customItemLabels["cpm3"..PICKUP_TYPE_ARMOR100..1] = "LG";
+	customItemLabels["cpm3"..PICKUP_TYPE_ARMOR100..2] = "Rail";
 	customItemLabels["cpm22"..PICKUP_TYPE_ARMOR50..1] = "RL";
 	customItemLabels["cpm22"..PICKUP_TYPE_ARMOR50..2] = "GL";
 
@@ -172,30 +172,42 @@ function apheleon_TimerTimeline:draw()
 			iconColor = Color(255,120,128);			
 		end
       
-	    --TODO: Move items to a diff area if they are picked up
 
-	    if pickup.timeUntilRespawn == 0 and pickup.canSpawn then
-	    	iconX = pickedUpItemsX
-	    	iconY = pickedUpItemsY
-	    	pickedUpItemsY = pickedUpItemsY - 80
-	    end
+		-- Draw the icons of items that are taken 
+
+	    if pickup.timeUntilRespawn > 0 or not pickup.canSpawn then
+
+			nvgFillColor(iconColor);
+		    nvgSvg(iconSvg, iconX, iconY, iconRadius);
+
+	    	-- Show label text below the icons
+		    if (pickup.label) then
+		    	pickup.label = mapItemLabel(world.mapName, pickup.type, pickup.label)
+				nvgFontSize(25);
+			    nvgFillColor(Color(255,255,255));
+			    nvgTextAlign(NVG_ALIGN_CENTER, NVG_ALIGN_MIDDLE);
+			    nvgText(iconX, iconY + 35, pickup.label);
+			end
+
+			function round(num, idp)
+				local mult = 10^(idp or 0)
+				return math.floor(num * mult + 0.5) / mult
+			end
 
 
-		-- Draw the icons
-		nvgFillColor(iconColor);
-	    nvgSvg(iconSvg, iconX, iconY, iconRadius);
+			-- TODO: Only show timer for the upcoming item
+			if (pickup.timeUntilRespawn < 5000 and pickup.canSpawn) then
+				nvgFontSize(25);
+			    nvgFillColor(Color(255,255,255));
+			    nvgTextAlign(NVG_ALIGN_CENTER, NVG_ALIGN_MIDDLE);
+
+			    --time = math.floor(( (pickup.timeUntilRespawn / 1000) * 10.5 )/ 10)
 
 
+			    time = round(pickup.timeUntilRespawn / 1000, 1)
+			    nvgText(iconX, iconY - 35, time);
+			end
 
-
-
-    	-- Show label text below the icons
-	    if (pickup.label) then
-	    	pickup.label = mapItemLabel(world.mapName, pickup.type, pickup.label)
-			nvgFontSize(25);
-		    nvgFillColor(Color(255,255,255));
-		    nvgTextAlign(NVG_ALIGN_CENTER, NVG_ALIGN_TOP);
-		    nvgText(iconX, iconY + 20, pickup.label);
 		end
 
 
