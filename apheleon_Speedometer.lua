@@ -20,6 +20,7 @@ function apheleon_Speedometer:draw()
     local player = getPlayer()
     local speed = math.ceil(player.speed)
 
+
     -- Helpers
 
     local fontSize = 40;
@@ -38,6 +39,7 @@ function apheleon_Speedometer:draw()
     --local gaugeMinUPS = 0 -- TODO: not used currently
     local gaugeMaxUPS = 900 -- this is used to 'scale' how fast the gauge needle moves
     local startingGaugeAngle = 40 -- where does the needle start?
+    local speed = math.min(speed, gaugeMaxUPS)
 
     -- Helpers - do not edit this
     local totalGaugeAngle = 180 + 2*(startingGaugeAngle) --
@@ -78,6 +80,11 @@ function apheleon_Speedometer:draw()
     liney = circleRadius * 0.9 * -math.sin(degreesToRadians(speedDegrees - startingGaugeAngle)) + circleCenterY
 
     -- Draw the gauage needle line
+
+    if (speed == gaugeMaxUPS) then
+        gaugeLineColor = Color(255,0,0)
+    end
+
     nvgBeginPath();
     nvgMoveTo(circleCenterX, circleCenterY);
     nvgLineTo(linex, liney);
@@ -103,12 +110,17 @@ function apheleon_Speedometer:draw()
     end
 
     -- UPS Text output
+
+    if (speed == gaugeMaxUPS) then
+        textColor = Color(255,0,0)
+    end
+
     nvgFontSize(fontSize);
     nvgFontFace("TitilliumWeb-Bold");
     nvgTextAlign(NVG_ALIGN_CENTER, NVG_ALIGN_MIDDLE);
     nvgFontBlur(0);
     nvgFillColor(textColor);
-    nvgText(0, 50, speed .. "ups");
+    nvgText(0, 50, math.ceil(player.speed) .. "ups");
 
     -- Draw gauge edge
     nvgBeginPath();
