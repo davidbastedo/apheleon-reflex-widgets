@@ -35,10 +35,12 @@ function apheleon_Speedometer:draw()
 
     -- Widget Config
 
-    local gaugeMinUPS = 0 -- TODO: not used currently
+    --local gaugeMinUPS = 0 -- TODO: not used currently
     local gaugeMaxUPS = 900 -- this is used to 'scale' how fast the gauge needle moves
     local startingGaugeAngle = 40 -- where does the needle start?
-    local totalGaugeAngle = 180 + 2*(startingGaugeAngle)
+
+    -- Helpers - do not edit this
+    local totalGaugeAngle = 180 + 2*(startingGaugeAngle) --
 
     -- Colors
     local textColor = Color(255,255,255,255);
