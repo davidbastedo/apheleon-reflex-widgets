@@ -28,7 +28,11 @@ function apheleon_TimerTimeline:draw()
 
 	-- Sort the items to hopefully make the label maker more consistent
 	--  i noticed in 33.4 that the order of the items in pickupTimers changed. 
-	table.sort(pickupTimers, function(a,b) return a.type<b.type end)
+	--  sort logic:  sort by armor - mega - carnage
+
+	--table.sort(pickupTimers, function(a,b) return a.type<b.type end)
+
+	table.sort(pickupTimers, function(a,b) if a.type >= 60 or b.type >=60 then return a.type < b.type; elseif (a.type >= 50 and a.type < 60) or (b.type >= 50 and b.type < 60) then return a.type > b.type;		else return a.type < b.type;		end;			end)
 
     -- Early out if HUD shouldn't be shown.
     if not shouldShowHUD() then return end;
@@ -61,6 +65,11 @@ function apheleon_TimerTimeline:draw()
 	local timelineRight = frameLeft + frameWidth;
 	local timelineWidth = frameWidth;
 
+	-- Spawn Box Positioning and Size
+	local spawnBoxEntryWidth = 15
+	local spawnBoxRight = frameLeft;
+	local spawnBoxPadding = 2
+
 	-- Draw the timeline frame
     local frameBackgroundColor = Color(0,0,0,45)
     nvgBeginPath();
@@ -87,7 +96,7 @@ function apheleon_TimerTimeline:draw()
     end
 
 
---=========================
+	--=========================
 	-- Adds number labels for items that appear multiple times on the map
 
     -- Build out a count of the number of each items on the map
@@ -229,6 +238,7 @@ function apheleon_TimerTimeline:draw()
 			    nvgFillColor(Color(255,255,255));
 			    nvgTextAlign(NVG_ALIGN_CENTER, NVG_ALIGN_MIDDLE);
 			    if (pickup.timeUntilRespawn < 5000) then
+			    	nvgFillColor(Color(255,70,70));
 			    	time = round(pickup.timeUntilRespawn / 1000, 1)
 			    else
 			    	time = round(pickup.timeUntilRespawn / 1000, 0)
@@ -237,5 +247,15 @@ function apheleon_TimerTimeline:draw()
 			    nvgText(iconX, iconY - 35, time);
 			end
 		end
+
+		-- Draw list of items that are spawned
+		if pickup.timeUntilRespawn == 0 and pickup.canSpawn then
+		    nvgBeginPath();
+		    nvgRoundedRect(spawnBoxRight - spawnBoxEntryWidth,frameTop,spawnBoxEntryWidth,frameHeight,5);
+		    nvgFillColor(iconColor);
+		    nvgFill();
+		    spawnBoxRight = spawnBoxRight - spawnBoxPadding - spawnBoxEntryWidth
+		end
+
     end
 end
