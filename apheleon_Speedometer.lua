@@ -5,11 +5,9 @@ apheleon_Speedometer =
 };
 registerWidget("apheleon_Speedometer");
 
-
 function degreesToRadians(angle)
     return angle * (math.pi / 180)
 end
-
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
@@ -18,12 +16,10 @@ function apheleon_Speedometer:draw()
     -- Early out if HUD shouldn't be shown.
     if not shouldShowHUD() then return end;
 
-
     -- Find player 
     local player = getPlayer()
     local speed = math.ceil(player.speed)
 
-    --speed = 700
     -- Helpers
 
     local fontSize = 40;
@@ -39,9 +35,10 @@ function apheleon_Speedometer:draw()
 
     -- Widget Config
 
-    local gaugeMin = 0 -- not used currently
-    local gauge180DegMark = 700 -- this is used to 'scale' how fast the gauge needle moves
+    local gaugeMinUPS = 0 -- TODO: not used currently
+    local gaugeMaxUPS = 900 -- this is used to 'scale' how fast the gauge needle moves
     local startingGaugeAngle = 40 -- where does the needle start?
+    local totalGaugeAngle = 180 + 2*(startingGaugeAngle)
 
     -- Colors
     local textColor = Color(255,255,255,255);
@@ -49,20 +46,16 @@ function apheleon_Speedometer:draw()
     local gaugeBackgroundColor = Color(0,0,0,120);
     local gaugeBackgroundCenterColor = Color(255,0,0,100);
     local gaugeLineColor = Color(255,255,255,255);
-    local gaugeEdgeColor = Color(255,255,255,80);
+    --local gaugeEdgeColor = Color(255,255,255,80);
+    local gaugeEdgeColor = Color(0,0,0,255);
 
-    local gaugeTickColor = Color(255,255,255,200);
+    local gaugeTickColor = Color(255,255,255,40);
 
     -- Draw guage background
     nvgBeginPath();
     nvgCircle(circleCenterX, circleCenterY, circleRadius)
     nvgFillColor(gaugeBackgroundColor);
     nvgFill();
-
-    -- Draw gauge edge
-    -- nvgStrokeColor(gaugeEdgeColor)
-    -- nvgStrokeWidth(3)
-    -- nvgStroke()
 
     --Draw gauge inner circle
     nvgBeginPath();
@@ -76,15 +69,13 @@ function apheleon_Speedometer:draw()
     nvgFillColor(gaugeLineColor);
     nvgFill();
 
+    -- Calculate the needle positioning as you change speeds in degrees
+    speedDegrees = speed * totalGaugeAngle / gaugeMaxUPS
 
+    linex = circleRadius * 0.9 * -math.cos(degreesToRadians(speedDegrees - startingGaugeAngle)) + circleCenterX
+    liney = circleRadius * 0.9 * -math.sin(degreesToRadians(speedDegrees - startingGaugeAngle)) + circleCenterY
 
-    -- Calculate the line positioning as you change speeds in degrees
-    speedDegrees = speed * 180 / gauge180DegMark
-
-    linex = circleRadius * -math.cos(degreesToRadians(speedDegrees - startingGaugeAngle)) + circleCenterX
-    liney = circleRadius * -math.sin(degreesToRadians(speedDegrees - startingGaugeAngle)) + circleCenterY
-
-    -- Draw the gauage line
+    -- Draw the gauage needle line
     nvgBeginPath();
     nvgMoveTo(circleCenterX, circleCenterY);
     nvgLineTo(linex, liney);
@@ -92,22 +83,24 @@ function apheleon_Speedometer:draw()
     nvgStrokeWidth(5)
     nvgStroke();
 
-    -- Draw gauge tick circle at each 100 ups
-    tickDegreesMax = 180 + (startingGaugeAngle * 2)
-    tickSpeedMax = (tickDegreesMax * gauge180DegMark) / 180
+    -- Draw gauge tick line at the edge at each 100 ups
+    for i=0, gaugeMaxUPS, 100 do
+        tickDegree = i * totalGaugeAngle / gaugeMaxUPS
+        tick_outer_x = circleRadius * -math.cos(degreesToRadians(tickDegree - startingGaugeAngle)) + circleCenterX
+        tick_outer_y = circleRadius * -math.sin(degreesToRadians(tickDegree - startingGaugeAngle)) + circleCenterY
 
-    for i=0, tickSpeedMax, 100 do
-        tickDegree = i * 180 / gauge180DegMark
-        tickx = circleRadius * -math.cos(degreesToRadians(tickDegree - startingGaugeAngle)) + circleCenterX
-        ticky = circleRadius * -math.sin(degreesToRadians(tickDegree - startingGaugeAngle)) + circleCenterY
+        tick_inner_x = circleRadius * 0.8 * -math.cos(degreesToRadians(tickDegree - startingGaugeAngle)) + circleCenterX
+        tick_inner_y = circleRadius * 0.8 * -math.sin(degreesToRadians(tickDegree - startingGaugeAngle)) + circleCenterY
 
         nvgBeginPath();
-        nvgCircle(tickx, ticky, circleRadius / 30)
-        nvgFillColor(gaugeTickColor);
-        nvgFill();
+        nvgMoveTo(tick_outer_x, tick_outer_y);
+        nvgLineTo(tick_inner_x, tick_inner_y);
+        nvgStrokeColor(gaugeTickColor);
+        nvgStrokeWidth(5)
+        nvgStroke();
     end
 
-    -- Text
+    -- UPS Text output
     nvgFontSize(fontSize);
     nvgFontFace("TitilliumWeb-Bold");
     nvgTextAlign(NVG_ALIGN_CENTER, NVG_ALIGN_MIDDLE);
@@ -115,7 +108,12 @@ function apheleon_Speedometer:draw()
     nvgFillColor(textColor);
     nvgText(0, 50, speed .. "ups");
 
-
+    -- Draw gauge edge
+    nvgBeginPath();
+    nvgCircle(circleCenterX, circleCenterY, circleRadius)
+    nvgStrokeColor(gaugeEdgeColor)
+    nvgStrokeWidth(3)
+    nvgStroke()
 
 
 end
