@@ -5,6 +5,7 @@ apheleon_TimerTimeline =
 };
 registerWidget("apheleon_TimerTimeline");
 
+-- List of item types that are used in this widget
 
 local PickupVis = {};
 PickupVis[PICKUP_TYPE_ARMOR50] = {};
@@ -57,18 +58,12 @@ function apheleon_TimerTimeline:draw()
     -- Early out if HUD shouldn't be shown.
     if not shouldShowHUD() then return end;
 
-    local translucency = 192;
-	
    	-- Find player
 	local player = getPlayer();
-
-	-- count pickups
-	local pickupCount = #pickupTimers;
     
     -- Timeline History Duration
 	-- num of historical seconds to show in the timeline
     local timelineDuration = 30
-
 
 	-- Frame Size
 	local frameHeight = 50
@@ -76,7 +71,6 @@ function apheleon_TimerTimeline:draw()
 
 	-- Frame Positiion
 	local frameLeft = -frameWidth / 2
-	--local frameLeft = 0
 	local frameTop = 0
 	local frameBottom = frameTop + frameHeight
 
@@ -189,7 +183,7 @@ function apheleon_TimerTimeline:draw()
 
 	--=======================
     -- iterate pickups for rendering
-	for i = 1, pickupCount do
+	for i = 1, #pickupTimers do
 		local pickup = pickupTimers[i];
 		local vis = PickupVis[pickup.type];
 	    if vis ~= nil then
@@ -208,35 +202,45 @@ function apheleon_TimerTimeline:draw()
 			local scaledTimerLocation = timeUntilRespawn / (timelineDuration * 1000)
 
 			-- this stretches item positining to match the configured timelineWidth
-			local iconX = scaledTimerLocation * timelineWidth
-			iconX = iconX + timelineLeft
-
+			local iconX = (scaledTimerLocation * timelineWidth) + timelineLeft
 	        local iconY = timelineTop;
-	        local iconColor = Color(255,255,255);
-	        local iconSvg = "internal/ui/icons/armor";
-			if pickup.type == PICKUP_TYPE_ARMOR50 then
-				iconColor = Color(0,255,0);
-			elseif pickup.type == PICKUP_TYPE_ARMOR100 then
-				iconColor = Color(255,255,0);
-			elseif pickup.type == PICKUP_TYPE_ARMOR150 then
-				iconColor = Color(255,0,0);
-			elseif pickup.type == PICKUP_TYPE_HEALTH100 then
-				iconSvg = "internal/ui/icons/health";
-				iconColor = Color(60,80,255);
+        	local iconColor = PickupVis[pickup.type].color;
+        	local iconSvg = PickupVis[pickup.type].svg;
 
-				-- when mega is held set color to light blue and position at the 30 sec mark 
-				if not pickup.canSpawn and timelineDuration >= 30  then
-					iconColor = Color(150,161,255);
-					iconX = ( timelineWidth * 30000 / (timelineDuration * 1000) ) + timelineLeft
-					pickup.label = "HELD"
-				end
-
-			elseif pickup.type == PICKUP_TYPE_POWERUPCARNAGE then
-				iconSvg = "internal/ui/icons/carnage";
-				iconColor = Color(255,120,128);			
+        	-- when mega is held set color to light blue and position at the 30 sec mark 
+        	if pickup.type == PICKUP_TYPE_HEALTH100 and not pickup.canSpawn and timelineDuration >= 30  then
+				iconColor = Color(150,161,255);
+				iconX = ( timelineWidth * 30000 / (timelineDuration * 1000) ) + timelineLeft
+				pickup.label = "HELD"
 			end
+
+	        --=====
+	  --       local iconColor = Color(255,255,255);
+	  --       local iconSvg = "internal/ui/icons/armor";
+			-- if pickup.type == PICKUP_TYPE_ARMOR50 then
+			-- 	iconColor = Color(0,255,0);
+			-- elseif pickup.type == PICKUP_TYPE_ARMOR100 then
+			-- 	iconColor = Color(255,255,0);
+			-- elseif pickup.type == PICKUP_TYPE_ARMOR150 then
+			-- 	iconColor = Color(255,0,0);
+			-- elseif pickup.type == PICKUP_TYPE_HEALTH100 then
+			-- 	iconSvg = "internal/ui/icons/health";
+			-- 	iconColor = Color(60,80,255);
+
+			-- 	-- when mega is held set color to light blue and position at the 30 sec mark 
+			-- 	if not pickup.canSpawn and timelineDuration >= 30  then
+			-- 		iconColor = Color(150,161,255);
+			-- 		iconX = ( timelineWidth * 30000 / (timelineDuration * 1000) ) + timelineLeft
+			-- 		pickup.label = "HELD"
+			-- 	end
+
+			-- elseif pickup.type == PICKUP_TYPE_POWERUPCARNAGE then
+			-- 	iconSvg = "internal/ui/icons/carnage";
+			-- 	iconColor = Color(255,120,128);			
+			-- end
+			--======
 	      
-			-- Draw the icons of items that are taken 
+			-- Draw the icons, time remaining text, and labels of items that are taken 
 		    if pickup.timeUntilRespawn > 0 or not pickup.canSpawn then
 
 				nvgFillColor(iconColor);
@@ -273,15 +277,15 @@ function apheleon_TimerTimeline:draw()
 				--  show integers for time > 5
 				--  show first decimal for time < 5
 				if (pickup.canSpawn and pickup.nextUp == true) then
-					nvgFontSize(25);
-				    nvgFillColor(Color(255,255,255));
-				    nvgTextAlign(NVG_ALIGN_CENTER, NVG_ALIGN_MIDDLE);
 				    if (pickup.timeUntilRespawn < 5000) then
 				    	nvgFillColor(Color(255,70,70));
 				    	time = round(pickup.timeUntilRespawn / 1000, 1)
 				    else
+				    	nvgFillColor(Color(255,255,255));
 				    	time = round(pickup.timeUntilRespawn / 1000, 0)
 				    end
+					nvgFontSize(25);
+				    nvgTextAlign(NVG_ALIGN_CENTER, NVG_ALIGN_MIDDLE);
 				    nvgText(iconX, iconY - 35, time);
 				end
 			end
@@ -289,7 +293,7 @@ function apheleon_TimerTimeline:draw()
 			-- Draw list of items that are spawned
 			if pickup.timeUntilRespawn == 0 and pickup.canSpawn then
 
-				-- Draw black drop shaddow
+				-- Draw black drop shaddow for each spawned item
 			    nvgBeginPath();
 			    nvgRoundedRect(spawnBoxRight - spawnBoxEntryWidth + 2,frameTop + 2,spawnBoxEntryWidth,frameHeight,0);
 			    nvgFillColor(Color(0,0,0));
