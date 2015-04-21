@@ -5,6 +5,24 @@ apheleon_TimerTimeline =
 };
 registerWidget("apheleon_TimerTimeline");
 
+
+local PickupVis = {};
+PickupVis[PICKUP_TYPE_ARMOR50] = {};
+PickupVis[PICKUP_TYPE_ARMOR50].svg = "internal/ui/icons/armor";
+PickupVis[PICKUP_TYPE_ARMOR50].color = Color(0,255,0);
+PickupVis[PICKUP_TYPE_ARMOR100] = {};
+PickupVis[PICKUP_TYPE_ARMOR100].svg = "internal/ui/icons/armor";
+PickupVis[PICKUP_TYPE_ARMOR100].color = Color(255,255,0);
+PickupVis[PICKUP_TYPE_ARMOR150] = {};
+PickupVis[PICKUP_TYPE_ARMOR150].svg = "internal/ui/icons/armor";
+PickupVis[PICKUP_TYPE_ARMOR150].color = Color(255,0,0);
+PickupVis[PICKUP_TYPE_HEALTH100] = {};
+PickupVis[PICKUP_TYPE_HEALTH100].svg = "internal/ui/icons/health";
+PickupVis[PICKUP_TYPE_HEALTH100].color = Color(60,80,255);
+PickupVis[PICKUP_TYPE_POWERUPCARNAGE] = {};
+PickupVis[PICKUP_TYPE_POWERUPCARNAGE].svg = "internal/ui/icons/carnage";
+PickupVis[PICKUP_TYPE_POWERUPCARNAGE].color = Color(255,120,128);
+
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
@@ -15,10 +33,12 @@ customItemLabels["cpm3"..PICKUP_TYPE_ARMOR100..1] = "Rail";
 customItemLabels["cpm3"..PICKUP_TYPE_ARMOR100..2] = "LG";
 customItemLabels["cpm22"..PICKUP_TYPE_ARMOR50..1] = "GL";
 customItemLabels["cpm22"..PICKUP_TYPE_ARMOR50..2] = "RL";
+customItemLabels["dp5"..PICKUP_TYPE_ARMOR100..1] = "Plasma";
+customItemLabels["dp5"..PICKUP_TYPE_ARMOR100..2] = "Tele";
 
 function mapItemLabel(map, itemtype, itemlabel)
-	if not (customItemLabels[map..itemtype..itemlabel] == nil) then
-		return customItemLabels[map..itemtype..itemlabel]
+	if not (customItemLabels[map:lower()..itemtype..itemlabel] == nil) then
+		return customItemLabels[map:lower()..itemtype..itemlabel]
 	else
 		return itemlabel
 	end
@@ -55,7 +75,8 @@ function apheleon_TimerTimeline:draw()
 	local frameWidth = 500
 
 	-- Frame Positiion
-	local frameLeft = 0
+	local frameLeft = -frameWidth / 2
+	--local frameLeft = 0
 	local frameTop = 0
 	local frameBottom = frameTop + frameHeight
 
@@ -63,35 +84,38 @@ function apheleon_TimerTimeline:draw()
 	local timelineTop = frameTop + (frameHeight / 2);
 	local timelineLeft = frameLeft;
 	local timelineRight = frameLeft + frameWidth;
+
 	local timelineWidth = frameWidth;
 
 	-- Spawn Box Positioning and Size
-	local spawnBoxEntryWidth = 15
-	local spawnBoxRight = frameLeft;
-	local spawnBoxPadding = 2
+	local spawnBoxEntryWidth = 13
+	local spawnBoxRight = frameLeft - 25;
+	local spawnBoxPadding = 4
 
 	-- Draw the timeline frame
-    local frameBackgroundColor = Color(0,0,0,45)
+    local frameBackgroundColor = Color(0,0,0,90)
     nvgBeginPath();
-    nvgRoundedRect(frameLeft,frameTop,frameWidth,frameHeight,15);
+    nvgRoundedRect(frameLeft ,frameTop,frameWidth,frameHeight,0);
     nvgFillColor(frameBackgroundColor);
     nvgFill();
 
     -- Draw the timeline dividing line strokes
+    -- TODO: Order the ietms based on when they spawned
     for i=5, timelineDuration-1, 5 do
-		marker = timelineWidth * i / (timelineDuration)
+		markerX = timelineWidth * i / (timelineDuration)
+		markerX = markerX + timelineLeft
 
 		nvgStrokeColor(Color(255,255,255, 200));
 		nvgStrokeWidth(2)
 
 		nvgBeginPath();
-		nvgMoveTo(marker, frameTop);
-		nvgLineTo(marker, frameTop + (frameHeight / 4));
+		nvgMoveTo(markerX, frameTop);
+		nvgLineTo(markerX, frameTop + (frameHeight / 4));
 		nvgStroke();
 
 		nvgBeginPath();
-		nvgMoveTo(marker, frameBottom);
-		nvgLineTo(marker, frameBottom - (frameHeight / 4));
+		nvgMoveTo(markerX, frameBottom);
+		nvgLineTo(markerX, frameBottom - (frameHeight / 4));
 		nvgStroke();
     end
 
@@ -167,95 +191,106 @@ function apheleon_TimerTimeline:draw()
     -- iterate pickups for rendering
 	for i = 1, pickupCount do
 		local pickup = pickupTimers[i];
-    
-		local timeUntilRespawn = pickup.timeUntilRespawn
+		local vis = PickupVis[pickup.type];
+	    if vis ~= nil then
+			local timeUntilRespawn = pickup.timeUntilRespawn
 
-		-- Don't draw items that will show up off of the timeline range, e.g. carnage
-		if pickup.timeUntilRespawn > timelineDuration * 1000 then break end;
+			-- Don't draw items that will show up off of the timeline range, e.g. carnage
+			if pickup.timeUntilRespawn > timelineDuration * 1000 then break end;
 
-		-- Configure the item icons and color
+			-- Configure the item icons and color
 
-	    local iconRadius = 20; -- update this?
+		    local iconRadius = 20; -- update this?
 
-	    -- scaledTimerLocation gives a 0.0 to 1.0 number of how close the item is to spawning
-	    --  along the timelineDuration (e.g. 40 seconds wide)
+		    -- scaledTimerLocation gives a 0.0 to 1.0 number of how close the item is to spawning
+		    --  along the timelineDuration (e.g. 40 seconds wide)
 
-		local scaledTimerLocation = timeUntilRespawn / (timelineDuration * 1000)
+			local scaledTimerLocation = timeUntilRespawn / (timelineDuration * 1000)
 
-		-- this stretches item positining to match the configured timelineWidth
-		local iconX = scaledTimerLocation * timelineWidth
+			-- this stretches item positining to match the configured timelineWidth
+			local iconX = scaledTimerLocation * timelineWidth
+			iconX = iconX + timelineLeft
 
-        local iconY = timelineTop;
-        local iconColor = Color(255,255,255);
-        local iconSvg = "internal/ui/icons/armor";
-		if pickup.type == PICKUP_TYPE_ARMOR50 then
-			iconColor = Color(0,255,0);
-		elseif pickup.type == PICKUP_TYPE_ARMOR100 then
-			iconColor = Color(255,255,0);
-		elseif pickup.type == PICKUP_TYPE_ARMOR150 then
-			iconColor = Color(255,0,0);
-		elseif pickup.type == PICKUP_TYPE_HEALTH100 then
-			iconSvg = "internal/ui/icons/health";
-			iconColor = Color(60,80,255);
+	        local iconY = timelineTop;
+	        local iconColor = Color(255,255,255);
+	        local iconSvg = "internal/ui/icons/armor";
+			if pickup.type == PICKUP_TYPE_ARMOR50 then
+				iconColor = Color(0,255,0);
+			elseif pickup.type == PICKUP_TYPE_ARMOR100 then
+				iconColor = Color(255,255,0);
+			elseif pickup.type == PICKUP_TYPE_ARMOR150 then
+				iconColor = Color(255,0,0);
+			elseif pickup.type == PICKUP_TYPE_HEALTH100 then
+				iconSvg = "internal/ui/icons/health";
+				iconColor = Color(60,80,255);
 
-			-- when mega is held set color to light blue and position at the 30 sec mark 
-			if not pickup.canSpawn and timelineDuration >= 30  then
-				iconColor = Color(150,161,255);
-				iconX = timelineWidth * 30000 / (timelineDuration * 1000)
-				pickup.label = "HELD"
+				-- when mega is held set color to light blue and position at the 30 sec mark 
+				if not pickup.canSpawn and timelineDuration >= 30  then
+					iconColor = Color(150,161,255);
+					iconX = ( timelineWidth * 30000 / (timelineDuration * 1000) ) + timelineLeft
+					pickup.label = "HELD"
+				end
+
+			elseif pickup.type == PICKUP_TYPE_POWERUPCARNAGE then
+				iconSvg = "internal/ui/icons/carnage";
+				iconColor = Color(255,120,128);			
+			end
+	      
+			-- Draw the icons of items that are taken 
+		    if pickup.timeUntilRespawn > 0 or not pickup.canSpawn then
+
+				nvgFillColor(iconColor);
+			    nvgSvg(iconSvg, iconX, iconY, iconRadius);
+
+		    	-- Show label text below the icons
+			    if (pickup.label) then
+			    	pickup.label = mapItemLabel(world.mapName, pickup.type, pickup.label)
+					nvgFontSize(25);
+				    nvgFillColor(Color(255,255,255));
+				    nvgTextAlign(NVG_ALIGN_CENTER, NVG_ALIGN_MIDDLE);
+				    nvgText(iconX, iconY + 35, pickup.label);
+				end
+
+				function round(num, idp)
+					local mult = 10^(idp or 0)
+					return math.floor(num * mult + 0.5) / mult
+				end
+
+				-- Only show timer for the next upcoming item at all times
+				--  show integers for time > 5
+				--  show first decimal for time < 5
+				if (pickup.canSpawn and pickup.nextUp == true) then
+					nvgFontSize(25);
+				    nvgFillColor(Color(255,255,255));
+				    nvgTextAlign(NVG_ALIGN_CENTER, NVG_ALIGN_MIDDLE);
+				    if (pickup.timeUntilRespawn < 5000) then
+				    	nvgFillColor(Color(255,70,70));
+				    	time = round(pickup.timeUntilRespawn / 1000, 1)
+				    else
+				    	time = round(pickup.timeUntilRespawn / 1000, 0)
+				    end
+
+				    nvgText(iconX, iconY - 35, time);
+				end
 			end
 
-		elseif pickup.type == PICKUP_TYPE_POWERUPCARNAGE then
-			iconSvg = "internal/ui/icons/carnage";
-			iconColor = Color(255,120,128);			
+			-- Draw list of items that are spawned
+			if pickup.timeUntilRespawn == 0 and pickup.canSpawn then
+
+				-- Draw black drop shaddow
+			    nvgBeginPath();
+			    nvgRoundedRect(spawnBoxRight - spawnBoxEntryWidth + 2,frameTop + 2,spawnBoxEntryWidth,frameHeight,0);
+			    nvgFillColor(Color(0,0,0));
+			    nvgFill();
+			    --spawnBoxRight = spawnBoxRight - spawnBoxPadding - spawnBoxEntryWidth
+
+			    -- Draw color bars for each spawned item
+			    nvgBeginPath();
+			    nvgRoundedRect(spawnBoxRight - spawnBoxEntryWidth,frameTop,spawnBoxEntryWidth,frameHeight,0);
+			    nvgFillColor(iconColor);
+			    nvgFill();
+			    spawnBoxRight = spawnBoxRight - spawnBoxPadding - spawnBoxEntryWidth
+			end
 		end
-      
-		-- Draw the icons of items that are taken 
-	    if pickup.timeUntilRespawn > 0 or not pickup.canSpawn then
-
-			nvgFillColor(iconColor);
-		    nvgSvg(iconSvg, iconX, iconY, iconRadius);
-
-	    	-- Show label text below the icons
-		    if (pickup.label) then
-		    	pickup.label = mapItemLabel(world.mapName, pickup.type, pickup.label)
-				nvgFontSize(25);
-			    nvgFillColor(Color(255,255,255));
-			    nvgTextAlign(NVG_ALIGN_CENTER, NVG_ALIGN_MIDDLE);
-			    nvgText(iconX, iconY + 35, pickup.label);
-			end
-
-			function round(num, idp)
-				local mult = 10^(idp or 0)
-				return math.floor(num * mult + 0.5) / mult
-			end
-
-			-- Only show timer for the next upcoming item at all times
-			--  show integers for time > 5
-			--  show first decimal for time < 5
-			if (pickup.canSpawn and pickup.nextUp == true) then
-				nvgFontSize(25);
-			    nvgFillColor(Color(255,255,255));
-			    nvgTextAlign(NVG_ALIGN_CENTER, NVG_ALIGN_MIDDLE);
-			    if (pickup.timeUntilRespawn < 5000) then
-			    	nvgFillColor(Color(255,70,70));
-			    	time = round(pickup.timeUntilRespawn / 1000, 1)
-			    else
-			    	time = round(pickup.timeUntilRespawn / 1000, 0)
-			    end
-
-			    nvgText(iconX, iconY - 35, time);
-			end
-		end
-
-		-- Draw list of items that are spawned
-		if pickup.timeUntilRespawn == 0 and pickup.canSpawn then
-		    nvgBeginPath();
-		    nvgRoundedRect(spawnBoxRight - spawnBoxEntryWidth,frameTop,spawnBoxEntryWidth,frameHeight,5);
-		    nvgFillColor(iconColor);
-		    nvgFill();
-		    spawnBoxRight = spawnBoxRight - spawnBoxPadding - spawnBoxEntryWidth
-		end
-
     end
 end
