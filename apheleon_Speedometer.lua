@@ -37,7 +37,7 @@ function apheleon_Speedometer:draw()
     -- Widget Config
 
     --local gaugeMinUPS = 0 -- TODO: not used currently
-    local gaugeMaxUPS = 900 -- this is used to 'scale' how fast the gauge needle moves
+    local gaugeMaxUPS = 800 -- this is used to 'scale' how fast the gauge needle moves
     local startingGaugeAngle = 40 -- where does the needle start?
     local speed = math.min(speed, gaugeMaxUPS)
 
