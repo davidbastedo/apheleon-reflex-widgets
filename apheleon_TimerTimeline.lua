@@ -240,6 +240,20 @@ function apheleon_TimerTimeline:draw()
 		    if pickup.timeUntilRespawn > 0 or not pickup.canSpawn then
 
 				nvgFillColor(iconColor);
+
+				-- Make the icons get bigger every second for the last 5 seconds
+				if ( pickup.nextUp == true and (
+						(pickup.timeUntilRespawn < 5100 and pickup.timeUntilRespawn > 4900)
+						or (pickup.timeUntilRespawn < 4100 and pickup.timeUntilRespawn > 3900)
+						or (pickup.timeUntilRespawn < 3100 and pickup.timeUntilRespawn > 2900)
+						or (pickup.timeUntilRespawn < 2100 and pickup.timeUntilRespawn > 1900)
+						or (pickup.timeUntilRespawn < 1100 and pickup.timeUntilRespawn > 900) 
+						or (pickup.timeUntilRespawn < 200) 
+						)
+					) then
+					iconRadius = iconRadius + 10
+				end
+
 			    nvgSvg(iconSvg, iconX, iconY, iconRadius);
 
 		    	-- Show label text below the icons
@@ -252,8 +266,7 @@ function apheleon_TimerTimeline:draw()
 				end
 
 				function round(num, idp)
-					local mult = 10^(idp or 0)
-					return math.floor(num * mult + 0.5) / mult
+					return string.format("%." .. (idp or 0) .. "f", num)
 				end
 
 				-- Only show timer for the next upcoming item at all times
@@ -269,7 +282,6 @@ function apheleon_TimerTimeline:draw()
 				    else
 				    	time = round(pickup.timeUntilRespawn / 1000, 0)
 				    end
-
 				    nvgText(iconX, iconY - 35, time);
 				end
 			end
@@ -292,5 +304,5 @@ function apheleon_TimerTimeline:draw()
 			    spawnBoxRight = spawnBoxRight - spawnBoxPadding - spawnBoxEntryWidth
 			end
 		end
-    end
+	end
 end
