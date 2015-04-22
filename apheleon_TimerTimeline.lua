@@ -167,12 +167,15 @@ function apheleon_TimerTimeline:draw()
 	small = nil;
 
 	for i=1, #pickupTimers do
-		if (small == nil and pickupTimers[i].timeUntilRespawn > 0) then
-			small = pickupTimers[i]
-		end
-		if (small ~= nil) then
-			if (pickupTimers[i].timeUntilRespawn > 0 and pickupTimers[i].timeUntilRespawn < small.timeUntilRespawn) then
+		local vis = PickupVis[pickupTimers[i].type];
+		if vis ~= nil then
+			if (small == nil and pickupTimers[i].timeUntilRespawn > 0) then
 				small = pickupTimers[i]
+			end
+			if (small ~= nil) then
+				if (pickupTimers[i].timeUntilRespawn > 0 and pickupTimers[i].timeUntilRespawn < small.timeUntilRespawn) then
+					small = pickupTimers[i]
+				end
 			end
 		end
 	end
