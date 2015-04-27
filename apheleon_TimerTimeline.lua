@@ -30,12 +30,16 @@ PickupVis[PICKUP_TYPE_POWERUPCARNAGE].color = Color(255,120,128);
 -- Create a list of custom item labels to help differentiate between duplicate items
 
 customItemLabels = {};
-customItemLabels["cpm3"..PICKUP_TYPE_ARMOR100..1] = "Rail";
-customItemLabels["cpm3"..PICKUP_TYPE_ARMOR100..2] = "LG";
+customItemLabels["cpm3"..PICKUP_TYPE_ARMOR100..1] = "LG";
+customItemLabels["cpm3"..PICKUP_TYPE_ARMOR100..2] = "Rail";
 customItemLabels["cpm22"..PICKUP_TYPE_ARMOR50..1] = "GL";
 customItemLabels["cpm22"..PICKUP_TYPE_ARMOR50..2] = "RL";
-customItemLabels["dp5"..PICKUP_TYPE_ARMOR100..1] = "Plasma";
-customItemLabels["dp5"..PICKUP_TYPE_ARMOR100..2] = "Tele";
+customItemLabels["dp5"..PICKUP_TYPE_ARMOR100..1] = "Tele";
+customItemLabels["dp5"..PICKUP_TYPE_ARMOR100..2] = "Plasma";
+customItemLabels["thct5"..PICKUP_TYPE_ARMOR100..1] = "Blue Room";
+customItemLabels["thct5"..PICKUP_TYPE_ARMOR100..2] = "Red Room";
+customItemLabels["thct7"..PICKUP_TYPE_ARMOR100..1] = "GL";
+customItemLabels["thct7"..PICKUP_TYPE_ARMOR100..2] = "LG";
 
 function mapItemLabel(map, itemtype, itemlabel)
 	if not (customItemLabels[map:lower()..itemtype..itemlabel] == nil) then
