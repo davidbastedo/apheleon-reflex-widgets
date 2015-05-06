@@ -51,7 +51,7 @@ function apheleon_HealthBar:draw()
     -- Colors
     local frameColor = Color(0,0,0,128);
     local barAlpha = 220;
-    local flashingBarAlpha = lerp(0,barAlpha,self.timer * 1/timeLoopDuration)
+    local flashingBarAlpha = lerp(0,barAlpha,self.timer / timeLoopDuration)
 	local barBgAlpha = 40;
     local iconAlpha = 32;
 
