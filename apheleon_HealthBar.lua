@@ -2,6 +2,8 @@ require "base/internal/ui/reflexcore"
 
 apheleon_HealthBar =
 {
+    timer = 0;
+    direction  = 1;
 };
 registerWidget("apheleon_HealthBar");
 
@@ -10,6 +12,16 @@ registerWidget("apheleon_HealthBar");
 --------------------------------------------------------------------------------
 function apheleon_HealthBar:draw()
  
+    timeLoopDuration = .25
+
+    if self.timer >= timeLoopDuration then  
+        self.direction = -1                 
+    elseif self.timer <= 0 then
+        self.direction = 1
+    end
+
+    self.timer = self.timer + (deltaTime * self.direction);
+
     -- Early out if HUD shouldn't be shown.
     if not shouldShowHUD() then return end;
 
@@ -39,6 +51,7 @@ function apheleon_HealthBar:draw()
     -- Colors
     local frameColor = Color(0,0,0,128);
     local barAlpha = 220;
+    local flashingBarAlpha = lerp(0,barAlpha,self.timer * 1/timeLoopDuration)
 	local barBgAlpha = 40;
     local iconAlpha = 32;
 
@@ -46,7 +59,7 @@ function apheleon_HealthBar:draw()
     if player.health > 100 then barColor = Color(16,116,217, barAlpha) end
     if player.health <= 100 then barColor = Color(2,167,46, barAlpha) end
     if player.health <= 80 then barColor = Color(255,176,14, barAlpha) end
-    if player.health <= 30 then barColor = Color(236,0,0, barAlpha) end
+    if player.health <= 30 then barColor = Color(236,0,0, flashingBarAlpha) end
 
     local barBackgroundColor;    
     if player.health > 100 then barBackgroundColor = Color(10,68,127, barBgAlpha) end
