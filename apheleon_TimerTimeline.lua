@@ -2,8 +2,24 @@ require "base/internal/ui/reflexcore"
 
 apheleon_TimerTimeline =
 {
+	-- user data, we'll save this into engine so it's persistent across loads
+	userData = {};
 };
 registerWidget("apheleon_TimerTimeline");
+
+
+function apheleon_TimerTimeline:initialize()
+	-- load data stored in engine
+	self.userData = loadUserData();
+	
+	-- ensure it has what we need
+	CheckSetDefaultValue(self, "userData", "table", {});
+	CheckSetDefaultValue(self.userData, "timelineDuration", "number", 30);
+	CheckSetDefaultValue(self.userData, "timelineBgColorEnabled", "boolean", true);
+	CheckSetDefaultValue(self.userData, "showAvailableItemsEnabled", "boolean", true);
+	CheckSetDefaultValue(self.userData, "showUpcomingItemsBlinkingEnabled", "boolean", true);
+
+end
 
 -- List of item types that are used in this widget
 
@@ -72,7 +88,7 @@ function apheleon_TimerTimeline:draw()
     
     -- Timeline History Duration
 	-- num of historical seconds to show in the timeline
-    local timelineDuration = 30
+    local timelineDuration = self.userData.timelineDuration
 
 	-- Frame Size
 	local frameHeight = 50
@@ -170,7 +186,9 @@ function apheleon_TimerTimeline:draw()
 	for i=1, #pickupTimers do
 		if (pickupTimers[i].nextUp == true) then
 			-- set bg color
-			frameBackgroundColor = PickupVis[pickupTimers[i].type].colorbg
+			if(self.userData.timelineBgColorEnabled) then
+				frameBackgroundColor = PickupVis[pickupTimers[i].type].colorbg
+			end
 		end
 	end
 
@@ -238,7 +256,7 @@ function apheleon_TimerTimeline:draw()
 				nvgFillColor(iconColor);
 
 				-- Make the icons get bigger every second for the last 5 seconds
-				if ( pickup.nextUp == true and (
+				if ( pickup.nextUp == true and self.userData.showUpcomingItemsBlinkingEnabled and (
 						(pickup.timeUntilRespawn < 5100 and pickup.timeUntilRespawn > 5000)
 						or (pickup.timeUntilRespawn < 4150 and pickup.timeUntilRespawn > 4000)
 						or (pickup.timeUntilRespawn < 3150 and pickup.timeUntilRespawn > 3000)
@@ -283,7 +301,7 @@ function apheleon_TimerTimeline:draw()
 			end
 
 			-- Draw list of items that are spawned
-			if pickup.timeUntilRespawn == 0 and pickup.canSpawn then
+			if pickup.timeUntilRespawn == 0 and pickup.canSpawn and self.userData.showAvailableItemsEnabled then
 
 				-- Draw black drop shaddow for each spawned item
 			    nvgBeginPath();
@@ -301,4 +319,25 @@ function apheleon_TimerTimeline:draw()
 			end
 		end
 	end
+end
+
+function apheleon_TimerTimeline:drawOptions(x,y)
+
+	local user = self.userData
+
+	uiLabel("Timeline Duration", x, y);
+	user.timelineDuration = clampTo2Decimal(uiEditBox(user.timelineDuration, x + 290, y, 80))
+	y = y + 40;
+
+	user.timelineBgColorEnabled = uiCheckBox(user.timelineBgColorEnabled, "Color Timeline By Next Upcoming Item", x, y);
+	y = y + 40;
+
+	user.showAvailableItemsEnabled = uiCheckBox(user.showAvailableItemsEnabled, "Show List of Available Items", x, y);
+	y = y + 40;
+
+	user.showUpcomingItemsBlinkingEnabled = uiCheckBox(user.showUpcomingItemsBlinkingEnabled, "Blink Upcoming Items on the Timeline", x, y);
+	y = y + 40;
+
+
+	saveUserData(user)
 end
