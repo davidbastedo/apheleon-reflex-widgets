@@ -43,19 +43,24 @@ function wasButtonPressedUp(past, current)
 end
 
 -- Take in the last frame and the current frame, and add any button changes to the buttonHistory list
-function comparePastAndCurrentButtonStates(past, current, buttonHistory)
+function comparePastAndCurrentButtonStates(past, current)
+
+    listOfButtonChanges = {};
+
     --consolePrint("----")
     for k, v in pairs(current) do
         --consolePrint("k: " .. k .. " v: " .. tostring(v))`
         if(wasButtonPressedDown(past[k], v)) then
             --consolePrint(k.." was pressed down!!!")
-            table.insert(buttonHistory, "down_"..k)
+            table.insert(listOfButtonChanges, "down_"..k)
         end
         if(wasButtonPressedUp(past[k], v)) then
             --consolePrint(k.." was pressed up!!!")
-            table.insert(buttonHistory, "up_"..k)
+            table.insert(listOfButtonChanges, "up_"..k)
         end
     end
+
+    return listOfButtonChanges;
 end
 
 --------------------------------------------------------------------------------
@@ -89,9 +94,22 @@ function apheleon_InputList:draw()
     -- for key,value in pairs(self.previousState) do consolePrint(key); end
     -- consolePrint("--")
 
-    comparePastAndCurrentButtonStates(self.previousState, self.currentState, self.buttonHistory)
 
+
+    -- generate a list of keys pressed or lifted since the last frame
+    listOfButtonChanges = comparePastAndCurrentButtonStates(self.previousState, self.currentState)
+    
+    -- add the list of recent key presses to the global list of key presses
+    table.insert(self.buttonHistory, listOfButtonChanges)
+
+    -- TODO: Make the list always 25 entries
+    -- TODO: Draw the list of items on the hud
+
+
+    -- This must be at the end of the script
     self.previousState = shallowcopy(self.currentState)
+
+
 
     --table.insert(self.buttonHistory, "test");
     for k, v in pairs(self.buttonHistory) do
