@@ -1,9 +1,13 @@
 require "base/internal/ui/reflexcore"
 
+-- maximum number of historical key presses to save
+maxListLength =  10
+
 apheleon_InputList =
 {
     previousState = {};
     buttonHistory = {};
+    ---maxListLength = 10
 };
 registerWidget("apheleon_InputList");
 
@@ -49,7 +53,7 @@ function comparePastAndCurrentButtonStates(past, current)
 
     --consolePrint("----")
     for k, v in pairs(current) do
-        --consolePrint("k: " .. k .. " v: " .. tostring(v))`
+        --consolePrint("k: " .. k .. " v: " .. tostring(v))
         if(wasButtonPressedDown(past[k], v)) then
             --consolePrint(k.." was pressed down!!!")
             table.insert(listOfButtonChanges, "down_"..k)
@@ -63,6 +67,19 @@ function comparePastAndCurrentButtonStates(past, current)
     return listOfButtonChanges;
 end
 
+function joinTables(t1, t2)
+    for k,v in ipairs(t2) do
+        table.insert(t1, v)
+    end 
+ 
+    -- trim the table until it is the maximum length
+    while (#t1 > maxListLength) do
+        table.remove(t1,1)
+    end
+
+    return t1
+end
+
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 function apheleon_InputList:draw()
@@ -74,10 +91,7 @@ function apheleon_InputList:draw()
     self.currentState = getPlayer().buttons
 
 
-    nvgFontSize(90)
-    nvgText(0, 0, "CurrentJumpState: "..tostring(self.currentState.jump));
-    nvgText(0, -100, "PreviousJumpState: "..tostring(self.previousState.jump));
-
+    nvgFontSize(50)
 
     -- if (self.currentState.jump or self.previousState.jump) then
     --     consolePrint("----BEGIN----")
@@ -86,7 +100,6 @@ function apheleon_InputList:draw()
     --     consolePrint("----END----")
     -- end
 
-    nvgText(0, -200, "Pressed?: "..tostring(wasButtonPressedDown(self.previousState.jump, self.currentState.jump)));
 
     wasButtonPressedUp(self.previousState.jump, self.currentState.jump)
 
@@ -95,25 +108,32 @@ function apheleon_InputList:draw()
     -- consolePrint("--")
 
 
-
     -- generate a list of keys pressed or lifted since the last frame
     listOfButtonChanges = comparePastAndCurrentButtonStates(self.previousState, self.currentState)
-    
+
     -- add the list of recent key presses to the global list of key presses
-    table.insert(self.buttonHistory, listOfButtonChanges)
+    self.buttonHistory = joinTables(self.buttonHistory, listOfButtonChanges)
 
-    -- TODO: Make the list always 25 entries
+
+    -- DEBUGGING
+    consolePrint("---DEBUGGING---")
+    for k, v in pairs(self.buttonHistory) do
+        consolePrint("k: " .. tostring(k) .. "  v: " .. tostring(v))
+    end
+
+    myString = '';
+    for k, v in pairs(self.buttonHistory) do
+        myString = myString.." "..tostring(v).." "
+    end
+    nvgText(-600, -200, myString);
+
+
+
+
+
     -- TODO: Draw the list of items on the hud
-
 
     -- This must be at the end of the script
     self.previousState = shallowcopy(self.currentState)
-
-
-
-    --table.insert(self.buttonHistory, "test");
-    for k, v in pairs(self.buttonHistory) do
-        consolePrint("k: " .. k .. " v: " .. v)
-    end
 
 end
