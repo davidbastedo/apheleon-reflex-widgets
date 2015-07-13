@@ -1,18 +1,70 @@
 require "base/internal/ui/reflexcore"
 
--- maximum number of historical key presses to save
-maxListLength =  10
-
 apheleon_InputList =
 {
+    userData = {};
     previousState = {};
     buttonHistory = {};
-    ---maxListLength = 10
 };
 registerWidget("apheleon_InputList");
 
--- We need this function to copy the list of current button states 
---  so we can compare the last frame to the current frame to check for any changes
+function apheleon_InputList:initialize()
+    -- load data stored in engine
+    self.userData = loadUserData();
+    
+    -- ensure it has what we need
+    CheckSetDefaultValue(self, "userData", "table", {});
+    CheckSetDefaultValue(self.userData, "maxListLength", "number", 20);
+    CheckSetDefaultValue(self.userData, "showButtonsLifted", "boolean", true);
+    CheckSetDefaultValue(self.userData, "iconSize", "number", 20);
+end
+
+
+local ButtonIcon = {};
+ButtonIcon["down_forward"] = {};
+ButtonIcon["down_forward"].svg = "internal/ui/icons/InputListIcons/forward";
+ButtonIcon["down_forward"].color = Color(255,255,255);
+ButtonIcon["up_forward"] = {};
+ButtonIcon["up_forward"].svg = "internal/ui/icons/InputListIcons/forward";
+ButtonIcon["up_forward"].color = Color(255,255,255,40);
+
+ButtonIcon["down_left"] = {};
+ButtonIcon["down_left"].svg = "internal/ui/icons/InputListIcons/left";
+ButtonIcon["down_left"].color = Color(255,255,255)
+ButtonIcon["up_left"] = {};
+ButtonIcon["up_left"].svg = "internal/ui/icons/InputListIcons/left";
+ButtonIcon["up_left"].color = Color(255,255,255,40);
+
+ButtonIcon["down_right"] = {};
+ButtonIcon["down_right"].svg = "internal/ui/icons/InputListIcons/right";
+ButtonIcon["down_right"].color = Color(255,255,255)
+ButtonIcon["up_right"] = {};
+ButtonIcon["up_right"].svg = "internal/ui/icons/InputListIcons/right";
+ButtonIcon["up_right"].color = Color(255,255,255,40)
+
+ButtonIcon["down_back"] = {};
+ButtonIcon["down_back"].svg = "internal/ui/icons/InputListIcons/back";
+ButtonIcon["down_back"].color = Color(255,255,255)
+ButtonIcon["up_back"] = {};
+ButtonIcon["up_back"].svg = "internal/ui/icons/InputListIcons/back";
+ButtonIcon["up_back"].color = Color(255,255,255,40)
+
+ButtonIcon["down_jump"] = {};
+ButtonIcon["down_jump"].svg = "internal/ui/icons/InputListIcons/jump";
+ButtonIcon["down_jump"].color = Color(200,255,200)
+ButtonIcon["up_jump"] = {};
+ButtonIcon["up_jump"].svg = "internal/ui/icons/InputListIcons/jump";
+ButtonIcon["up_jump"].color = Color(200,255,200,40)
+
+ButtonIcon["down_attack"] = {};
+ButtonIcon["down_attack"].svg = "internal/ui/icons/InputListIcons/attack";
+ButtonIcon["down_attack"].color = Color(255,200,200)
+ButtonIcon["up_attack"] = {};
+ButtonIcon["up_attack"].svg = "internal/ui/icons/InputListIcons/attack";
+ButtonIcon["up_attack"].color = Color(255,200,200,40)
+
+-- We need this function to copy the list of current button states to a backup
+--  so we can compare the last frame to the current frame to check for any input changes
 function shallowcopy(orig)
     local orig_type = type(orig)
     local copy
@@ -30,7 +82,6 @@ end
 
 function wasButtonPressedDown(past, current)
     if (past == false and current == true) then
-        --consolePrint("it was pressed")
         return true;
     else
         return false;
@@ -38,28 +89,24 @@ function wasButtonPressedDown(past, current)
 end
 
 function wasButtonPressedUp(past, current)
+    if (apheleon_InputList.userData.showButtonsLifted == false) then
+        return false
+    end
     if (past == true and current == false) then
-        --consolePrint("it was lifted")
         return true;
     else
         return false;
     end
 end
 
--- Take in the last frame and the current frame, and add any button changes to the buttonHistory list
+-- Take in the last frame and the current frame, and return a single list of button changes
 function comparePastAndCurrentButtonStates(past, current)
-
     listOfButtonChanges = {};
-
-    --consolePrint("----")
     for k, v in pairs(current) do
-        --consolePrint("k: " .. k .. " v: " .. tostring(v))
         if(wasButtonPressedDown(past[k], v)) then
-            --consolePrint(k.." was pressed down!!!")
             table.insert(listOfButtonChanges, "down_"..k)
         end
         if(wasButtonPressedUp(past[k], v)) then
-            --consolePrint(k.." was pressed up!!!")
             table.insert(listOfButtonChanges, "up_"..k)
         end
     end
@@ -67,13 +114,14 @@ function comparePastAndCurrentButtonStates(past, current)
     return listOfButtonChanges;
 end
 
+-- Take in two tables, merge them, and return a single table
 function joinTables(t1, t2)
     for k,v in ipairs(t2) do
         table.insert(t1, v)
     end 
  
     -- trim the table until it is the maximum length
-    while (#t1 > maxListLength) do
+    while (#t1 > apheleon_InputList.userData.maxListLength) do
         table.remove(t1,1)
     end
 
@@ -87,26 +135,12 @@ function apheleon_InputList:draw()
     -- Early out if HUD shouldn't be shown.
     if not shouldShowHUD() then return end;
 
+    -- UI Helpers
+    local inputListPadding = 5
+    local inputIconSize = self.userData.iconSize
+
     -- Find the current player's buttons 
     self.currentState = getPlayer().buttons
-
-
-    nvgFontSize(50)
-
-    -- if (self.currentState.jump or self.previousState.jump) then
-    --     consolePrint("----BEGIN----")
-    --     consolePrint("CurrentJumpState: "..tostring(self.currentState.jump))
-    --     consolePrint("PreviousJumpState: "..tostring(self.previousState.jump))
-    --     consolePrint("----END----")
-    -- end
-
-
-    wasButtonPressedUp(self.previousState.jump, self.currentState.jump)
-
-
-    -- for key,value in pairs(self.previousState) do consolePrint(key); end
-    -- consolePrint("--")
-
 
     -- generate a list of keys pressed or lifted since the last frame
     listOfButtonChanges = comparePastAndCurrentButtonStates(self.previousState, self.currentState)
@@ -114,26 +148,36 @@ function apheleon_InputList:draw()
     -- add the list of recent key presses to the global list of key presses
     self.buttonHistory = joinTables(self.buttonHistory, listOfButtonChanges)
 
-
-    -- DEBUGGING
-    consolePrint("---DEBUGGING---")
+    local iconX = 0
+    local iconY = 0
     for k, v in pairs(self.buttonHistory) do
-        consolePrint("k: " .. tostring(k) .. "  v: " .. tostring(v))
+        local iconColor = ButtonIcon[v].color;
+        local iconSvg = ButtonIcon[v].svg;
+        iconX = (k - 1) * (inputIconSize * 2) + inputListPadding * (k - 1)
+        nvgFillColor(iconColor);
+        nvgSvg(iconSvg, iconX, iconY, inputIconSize);
     end
-
-    myString = '';
-    for k, v in pairs(self.buttonHistory) do
-        myString = myString.." "..tostring(v).." "
-    end
-    nvgText(-600, -200, myString);
-
-
-
-
-
-    -- TODO: Draw the list of items on the hud
 
     -- This must be at the end of the script
     self.previousState = shallowcopy(self.currentState)
 
+end
+
+
+function apheleon_InputList:drawOptions(x,y)
+
+    local user = self.userData
+
+    uiLabel("Number of key presses shown", x, y);
+    user.maxListLength = clampTo2Decimal(uiEditBox(user.maxListLength, x + 290, y, 80))
+    y = y + 40;
+
+    user.showButtonsLifted = uiCheckBox(user.showButtonsLifted, "Show icons when a button is lifted", x, y);
+    y = y + 40;
+
+    uiLabel("Icon size", x, y);
+    user.iconSize = clampTo2Decimal(uiEditBox(user.iconSize, x + 290, y, 80))
+    y = y + 40;
+
+    saveUserData(user)
 end
