@@ -18,6 +18,8 @@ function apheleon_TimerTimeline:initialize()
 	CheckSetDefaultValue(self.userData, "timelineBgColorEnabled", "boolean", true);
 	CheckSetDefaultValue(self.userData, "showAvailableItemsEnabled", "boolean", true);
 	CheckSetDefaultValue(self.userData, "showUpcomingItemsBlinkingEnabled", "boolean", true);
+	CheckSetDefaultValue(self.userData, "showGreenArmorsEnabled", "boolean", false);
+
 
 end
 
@@ -55,16 +57,30 @@ PickupVis[PICKUP_TYPE_POWERUPRESIST].colorbg = Color(30,50,64,90);
 -- Create a list of custom item labels to help differentiate between duplicate items
 
 customItemLabels = {};
+customItemLabels["bdm3"..PICKUP_TYPE_ARMOR100..1] = "Top";
+customItemLabels["bdm3"..PICKUP_TYPE_ARMOR100..2] = "Bottom";
 customItemLabels["cpm3"..PICKUP_TYPE_ARMOR100..1] = "LG";
 customItemLabels["cpm3"..PICKUP_TYPE_ARMOR100..2] = "Rail";
 customItemLabels["cpm22"..PICKUP_TYPE_ARMOR50..1] = "GL";
 customItemLabels["cpm22"..PICKUP_TYPE_ARMOR50..2] = "RL";
+customItemLabels["dp4"..PICKUP_TYPE_ARMOR100..1] = "GL";
+customItemLabels["dp4"..PICKUP_TYPE_ARMOR100..2] = "Rail";
 customItemLabels["dp5"..PICKUP_TYPE_ARMOR100..1] = "Tele";
 customItemLabels["dp5"..PICKUP_TYPE_ARMOR100..2] = "Plasma";
+customItemLabels["thct2"..PICKUP_TYPE_ARMOR100..1] = "Rail";
+customItemLabels["thct2"..PICKUP_TYPE_ARMOR100..2] = "LG";
 customItemLabels["thct5"..PICKUP_TYPE_ARMOR100..1] = "Blue Room";
 customItemLabels["thct5"..PICKUP_TYPE_ARMOR100..2] = "Red Room";
+--customItemLabels["thct7"..PICKUP_TYPE_ARMOR100..1] = "LG"; -- for demos
+--customItemLabels["thct7"..PICKUP_TYPE_ARMOR100..2] = "GL";
 customItemLabels["thct7"..PICKUP_TYPE_ARMOR100..1] = "GL";
 customItemLabels["thct7"..PICKUP_TYPE_ARMOR100..2] = "LG";
+customItemLabels["breizdm4"..PICKUP_TYPE_ARMOR100..1] = "Rail";
+customItemLabels["breizdm4"..PICKUP_TYPE_ARMOR100..2] = "Mega";
+customItemLabels["xdm15"..PICKUP_TYPE_ARMOR100..1] = "Bottom";
+customItemLabels["xdm15"..PICKUP_TYPE_ARMOR100..2] = "LG";
+customItemLabels["tephra"..PICKUP_TYPE_ARMOR100..1] = "Mega";
+customItemLabels["tephra"..PICKUP_TYPE_ARMOR100..2] = "LG";
 
 function mapItemLabel(map, itemtype, itemlabel)
 	if not (customItemLabels[map:lower()..itemtype..itemlabel] == nil) then
@@ -75,6 +91,10 @@ function mapItemLabel(map, itemtype, itemlabel)
 end
 
 function apheleon_TimerTimeline:draw()
+
+	if (self.userData.showGreenArmorsEnabled == false) then
+		PickupVis[PICKUP_TYPE_ARMOR50]  = nil;
+	end
 
 	-- Sort the items to hopefully make the label maker more consistent
 	--  i noticed in 33.4 that the order of the items in pickupTimers changed. 
@@ -340,6 +360,9 @@ function apheleon_TimerTimeline:drawOptions(x,y)
 	y = y + 40;
 
 	user.showUpcomingItemsBlinkingEnabled = uiCheckBox(user.showUpcomingItemsBlinkingEnabled, "Blink Upcoming Items on the Timeline", x, y);
+	y = y + 40;
+
+	user.showGreenArmorsEnabled = uiCheckBox(user.showGreenArmorsEnabled, "Show Green Armors on the Timeline", x, y);
 	y = y + 40;
 
 
