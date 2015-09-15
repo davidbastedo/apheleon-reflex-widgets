@@ -19,6 +19,7 @@ function apheleon_TimerTimeline:initialize()
 	CheckSetDefaultValue(self.userData, "showAvailableItemsEnabled", "boolean", true);
 	CheckSetDefaultValue(self.userData, "showUpcomingItemsBlinkingEnabled", "boolean", true);
 	CheckSetDefaultValue(self.userData, "showGreenArmorsEnabled", "boolean", false);
+	CheckSetDefaultValue(self.userData, "onlyShowWhenSpectating", "boolean", false);
 
 
 end
@@ -82,13 +83,32 @@ customItemLabels["xdm15"..PICKUP_TYPE_ARMOR100..2] = "LG";
 customItemLabels["tephra"..PICKUP_TYPE_ARMOR100..1] = "Mega";
 customItemLabels["tephra"..PICKUP_TYPE_ARMOR100..2] = "LG";
 
+
+local function isSpectating()
+	local lp = getLocalPlayer()
+	if lp then
+		local lps = lp.state
+		return (lps == PLAYER_STATE_SPECTATOR or lps == PLAYER_STATE_QUEUED)
+	else return false end
+end
+
+
 function mapItemLabel(map, itemtype, itemlabel)
+	if isSpectating() then
+		if itemlabel == 1 then
+			itemlabel = 2
+		else
+			itemlabel = 1
+		end
+	end
 	if not (customItemLabels[map:lower()..itemtype..itemlabel] == nil) then
 		return customItemLabels[map:lower()..itemtype..itemlabel]
 	else
 		return itemlabel
 	end
 end
+
+
 
 function apheleon_TimerTimeline:draw()
 
@@ -106,6 +126,7 @@ function apheleon_TimerTimeline:draw()
 
     -- Early out if HUD shouldn't be shown.
     if not shouldShowHUD() then return end;
+    if not isSpectating() and self.userData.onlyShowWhenSpectating then return end;
 
    	-- Find player
 	local player = getPlayer();
@@ -365,6 +386,8 @@ function apheleon_TimerTimeline:drawOptions(x,y)
 	user.showGreenArmorsEnabled = uiCheckBox(user.showGreenArmorsEnabled, "Show Green Armors on the Timeline", x, y);
 	y = y + 40;
 
+	user.onlyShowWhenSpectating = uiCheckBox(user.onlyShowWhenSpectating, "Only show timeline when spectating", x, y);
+	y = y + 40;
 
 	saveUserData(user)
 end
