@@ -44,6 +44,10 @@ PickupVis[PICKUP_TYPE_POWERUPCARNAGE] = {};
 PickupVis[PICKUP_TYPE_POWERUPCARNAGE].svg = "internal/ui/icons/carnage";
 PickupVis[PICKUP_TYPE_POWERUPCARNAGE].color = Color(255,120,128);
 PickupVis[PICKUP_TYPE_POWERUPCARNAGE].colorbg = Color(128,60,64,90);
+PickupVis[PICKUP_TYPE_POWERUPRESIST] = {};
+PickupVis[PICKUP_TYPE_POWERUPRESIST].svg = "internal/ui/icons/resist";
+PickupVis[PICKUP_TYPE_POWERUPRESIST].color = Color(60,100,128);
+PickupVis[PICKUP_TYPE_POWERUPRESIST].colorbg = Color(30,50,64,90);
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
