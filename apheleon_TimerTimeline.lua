@@ -229,7 +229,8 @@ function apheleon_TimerTimeline:draw()
 	-- set frame color to the color of the next upcoming item
     frameBackgroundColor = Color(0,0,0,90)
 	for i=1, #pickupTimers do
-		if (pickupTimers[i].nextUp == true) then
+		local vis = PickupVis[pickupTimers[i].type];
+		if (pickupTimers[i].nextUp == true and not vis == nil) then
 			-- set bg color
 			if(self.userData.timelineBgColorEnabled) then
 				frameBackgroundColor = PickupVis[pickupTimers[i].type].colorbg
@@ -289,14 +290,14 @@ function apheleon_TimerTimeline:draw()
         	local iconSvg = PickupVis[pickup.type].svg;
 
         	-- when mega is held set color to light blue and position at the 30 sec mark 
-        	if pickup.type == PICKUP_TYPE_HEALTH100 and not pickup.canSpawn and timelineDuration >= 30  then
+        	if pickup.type == PICKUP_TYPE_HEALTH100 and pickup.isHeldByPlayer and timelineDuration >= 30  then
 				iconColor = Color(150,161,255);
 				iconX = ( timelineWidth * 30000 / (timelineDuration * 1000) ) + timelineLeft
 				pickup.label = "HELD"
 			end
 	      
 			-- Draw the icons, time remaining text, and labels of items that are taken 
-		    if pickup.timeUntilRespawn > 0 or not pickup.canSpawn then
+		    if pickup.timeUntilRespawn > 0 or pickup.isHeldByPlayer then
 
 				nvgFillColor(iconColor);
 
@@ -331,7 +332,7 @@ function apheleon_TimerTimeline:draw()
 				-- Only show timer for the next upcoming item at all times
 				--  show integers for time > 5
 				--  show first decimal for time < 5
-				if (pickup.canSpawn and pickup.nextUp == true) then
+				if (not pickup.isHeldByPlayer and pickup.nextUp == true) then
 				    if (pickup.timeUntilRespawn < 5000) then
 				    	nvgFillColor(Color(255,70,70));
 				    	time = round(pickup.timeUntilRespawn / 1000, 1)
@@ -346,7 +347,7 @@ function apheleon_TimerTimeline:draw()
 			end
 
 			-- Draw list of items that are spawned
-			if pickup.timeUntilRespawn == 0 and pickup.canSpawn and self.userData.showAvailableItemsEnabled then
+			if pickup.timeUntilRespawn == 0 and not pickup.isHeldByPlayer and self.userData.showAvailableItemsEnabled then
 
 				-- Draw black drop shaddow for each spawned item
 			    nvgBeginPath();
