@@ -325,7 +325,7 @@ function apheleon_TimerTimeline:draw()
 				    nvgText(iconX, iconY + 35, pickup.label);
 				end
 
-				function round(num, idp)
+				local function round(num, idp)
 					return string.format("%." .. (idp or 0) .. "f", num)
 				end
 
